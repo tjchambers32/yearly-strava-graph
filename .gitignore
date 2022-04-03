@@ -127,3 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# strava data
+activities.csv
+
+# output images
+*.png
