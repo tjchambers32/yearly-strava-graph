@@ -75,6 +75,7 @@ def create_graph(enriched, graph_name: str):
     y_vals = [round(val, 2) for val in y_vals]
     plt.figure(figsize=(20,10))
     plt.plot(x_vals, y_vals)
+    plt.title(graph_name)
 
     plt.grid()
     ax = plt.gca()
@@ -133,7 +134,6 @@ def main(year, file, activity_type, graph_name):
     print(f"Number of {activity_type} activities in year: {len(activities)}")
 
     enriched = enrich_activities(activities, year)
-    print(len(enriched))
 
     create_graph(enriched, graph_name)
 
