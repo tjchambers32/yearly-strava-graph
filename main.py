@@ -68,14 +68,18 @@ def enrich_activities(activities, year):
     return enriched
 
 
-def create_graph(enriched, graph_name: str):
-    """Create python graph from activities data."""
+def create_graph(enriched, goal_mileage, graph_name: str):
+    """Create python graph from activities and goal data."""
     x_vals, y_vals_init = zip(*[(i["date"], np.cumsum(i["mileage"])) for i in enriched])
     y_vals = np.cumsum(y_vals_init)
     y_vals = [round(val, 2) for val in y_vals]
     plt.figure(figsize=(20,10))
     plt.plot(x_vals, y_vals)
     plt.title(graph_name)
+
+    # add in goal
+    (goal_x, goal_y) = goal_mileage
+    plt.plot(goal_x, goal_y)
 
     plt.grid()
     ax = plt.gca()
@@ -92,7 +96,22 @@ def create_graph(enriched, graph_name: str):
         last_b = b
 
     plt.annotate(xy=(last_a, last_b+20), text=str(last_b))
-    plt.savefig(f'{graph_name}.png', bbox_inches='tight')
+    plt.savefig(f'graphs/{graph_name}.png', bbox_inches='tight')
+
+
+def generate_goal_mileage(goal, year):
+    """Generate x and y vals for linear goal mileage."""
+    days = gen_days(year)
+    mileage_per_day = round(float(goal/len(days)), 2)
+    x_vals = []
+    y_vals = []
+    cum_mileage = 0
+    for day in days:
+        x_vals.append(day)
+        cum_mileage += mileage_per_day
+        y_vals.append(cum_mileage)
+
+    return (x_vals, y_vals)
 
 
 def find_matching_activities(day, activities):
@@ -124,18 +143,21 @@ def gen_days(year):
 @click.command()
 @click.option('--year', default=2021, help='Year to generate graph on')
 @click.option(
-    '--file', default='activities.csv', help='Path to strava activities csv file'
+    '--file', default='activities/activities.csv', help='Path to strava activities csv file'
 )
 @click.option('--activity_type', default='Run', help='Activity Type to filter on')
-@click.option('--graph_name', default='2021 Running Mileage', help='Graph title and save file name')
-def main(year, file, activity_type, graph_name):
+@click.option('--graph_name', default='2022 Running Mileage', help='Graph title and save file name')
+@click.option('--goal', default=1450, help='Add a dotted line representing a yearly mileage goal.')
+def main(year, file, activity_type, graph_name, goal: int):
     """Generate graph of mileage accumulation from your strava data archive."""
     activities = filter_activities(year, file, activity_type)
     print(f"Number of {activity_type} activities in year: {len(activities)}")
 
     enriched = enrich_activities(activities, year)
 
-    create_graph(enriched, graph_name)
+    goal_mileage = generate_goal_mileage(goal, year)
+
+    create_graph(enriched, goal_mileage, graph_name)
 
 
 if __name__ == "__main__":
